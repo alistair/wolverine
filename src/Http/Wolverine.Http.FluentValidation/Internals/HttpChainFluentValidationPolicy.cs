@@ -1,3 +1,4 @@
+using System.Reflection.Metadata;
 using FluentValidation;
 using JasperFx.CodeGeneration;
 using JasperFx.CodeGeneration.Frames;
@@ -9,6 +10,18 @@ namespace Wolverine.Http.FluentValidation.Internals;
 
 internal class HttpChainFluentValidationPolicy : IHttpPolicy
 {
+    public HttpChainFluentValidationPolicy()
+    {
+        ValidationExecutionPolicy = FluentValidationExecutionPolicy.Default;
+    }
+
+    public HttpChainFluentValidationPolicy(FluentValidationExecutionPolicy validationExecutionPolicy)
+    {
+        ValidationExecutionPolicy = validationExecutionPolicy;
+    }
+
+    internal FluentValidationExecutionPolicy ValidationExecutionPolicy { get; private set; }
+
     public void Apply(IReadOnlyList<HttpChain> chains, GenerationRules rules, IContainer container)
     {
         foreach (var chain in chains.Where(x => x.RequestType != null)) Apply(chain, container);
@@ -45,6 +58,9 @@ internal class HttpChainFluentValidationPolicy : IHttpPolicy
                     .MakeGenericMethod(chain.RequestType);
 
             var methodCall = new MethodCall(typeof(FluentValidationHttpExecutor), method);
+
+            methodCall.TrySetArgument(JasperFx.CodeGeneration.Model.Constant.ForEnum(ValidationExecutionPolicy));
+
             var maybeResult = new MaybeEndWithResultFrame(methodCall.ReturnVariable!);
             chain.Middleware.InsertRange(0, new Frame[]{methodCall,maybeResult});
         }

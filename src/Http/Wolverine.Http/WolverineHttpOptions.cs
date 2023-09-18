@@ -89,7 +89,17 @@ public class WolverineHttpOptions
     /// <typeparam name="T"></typeparam>
     public void AddPolicy<T>() where T : IHttpPolicy, new()
     {
-        Policies.Add(new T());
+        AddPolicy(new T());
+    }
+
+    /// <summary>
+    ///     Add a new IEndpointPolicy for the Wolverine endpoints
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="policy"></param>
+    public void AddPolicy<T>(T policy) where T : IHttpPolicy
+    {
+        Policies.Add(policy);
     }
 
     /// <summary>

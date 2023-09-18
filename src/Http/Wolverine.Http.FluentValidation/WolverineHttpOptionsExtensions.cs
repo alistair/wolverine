@@ -2,6 +2,11 @@ using Wolverine.Http.FluentValidation.Internals;
 
 namespace Wolverine.Http.FluentValidation;
 
+public enum FluentValidationExecutionPolicy {
+    Default,
+    ForceSequential,
+}
+
 public static class WolverineHttpOptionsExtensions
 {
     #region sample_usage_of_http_add_policy
@@ -11,9 +16,9 @@ public static class WolverineHttpOptionsExtensions
     ///     validator for the request type
     /// </summary>
     /// <param name="httpOptions"></param>
-    public static void UseFluentValidationProblemDetailMiddleware(this WolverineHttpOptions httpOptions)
+    public static void UseFluentValidationProblemDetailMiddleware(this WolverineHttpOptions httpOptions, FluentValidationExecutionPolicy validationExecutionPolicy = FluentValidationExecutionPolicy.Default)
     {
-        httpOptions.AddPolicy<HttpChainFluentValidationPolicy>();
+        httpOptions.AddPolicy<HttpChainFluentValidationPolicy>(new HttpChainFluentValidationPolicy(validationExecutionPolicy));
     }
 
     #endregion

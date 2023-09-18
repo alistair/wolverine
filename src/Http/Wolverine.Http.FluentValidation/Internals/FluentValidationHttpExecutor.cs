@@ -32,11 +32,26 @@ public static class FluentValidationHttpExecutor
     public static async Task<IResult> ExecuteMany<T>(
         IReadOnlyList<IValidator<T>> validators,
         IProblemDetailSource<T> source,
+        FluentValidationExecutionPolicy executionPolicy,
         T message)
     {
-        var validationFailureTasks = validators
-            .Select(validator => validator.ValidateAsync(message));
-        var validationFailures = await Task.WhenAll(validationFailureTasks);
+        global::FluentValidation.Results.ValidationResult[] validationFailures = null;
+
+        if (executionPolicy == FluentValidationExecutionPolicy.ForceSequential)
+        {
+            var results = new List<global::FluentValidation.Results.ValidationResult>();
+            foreach(var validator in validators)
+            {
+                results.Add(await validator.ValidateAsync(message));
+            }
+            validationFailures = results.ToArray();
+        } else {
+            var validationFailureTasks = validators
+                .Select(validator => validator.ValidateAsync(message));
+
+            validationFailures = await Task.WhenAll(validationFailureTasks);
+        }
+
         var failures = validationFailures.SelectMany(validationResult => validationResult.Errors)
             .Where(validationFailure => validationFailure != null)
             .ToList();
